@@ -2,10 +2,10 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>NASA Control - Reentrada Atmosférica</title>
+    <title>Sistemas de Bordo - Checklist de Decolagem</title>
     <style>
         body {
-            background-color: #0b0e14;
+            background-color: #131313;
             color: white;
             font-family: 'Segoe UI', sans-serif;
             display: flex;
@@ -14,113 +14,152 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            padding: 20px;
         }
 
         .container {
-            background-color: #161b22;
+            background-color: #1e1e1e;
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: left;
             width: 100%;
-            max-width: 400px;
-            border: 1px solid #30363d;
+            max-width: 450px;
         }
 
-        h1 { color: #58a6ff; font-size: 1.4rem; margin-bottom: 20px; }
+        h1 { text-align: center; color: #ed145b; font-size: 1.5rem; }
 
-        label { display: block; margin-top: 15px; font-size: 0.85rem; color: #8b949e; text-align: left; }
+        label { display: block; margin-top: 10px; font-size: 0.9rem; color: #bbb; }
 
-        input {
-            padding: 12px;
+        input[type="number"] {
+            padding: 10px;
             font-size: 1rem;
-            border-radius: 6px;
-            border: 1px solid #30363d;
-            background: #0d1117;
-            color: #c9d1d9;
+            border-radius: 5px;
+            border: 2px solid #333;
+            background: #000;
+            color: #fff;
             margin-bottom: 10px;
             width: 100%;
             box-sizing: border-box;
         }
 
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+            background: #252525;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .checkbox-group input { width: auto; margin: 0; }
+
         button {
-            background-color: #238636;
+            background-color: #ed145b;
             color: white;
             border: none;
             padding: 15px;
-            border-radius: 6px;
+            border-radius: 5px;
             font-weight: bold;
             cursor: pointer;
             width: 100%;
-            margin-top: 15px;
-            transition: 0.2s;
+            margin-top: 10px;
+            transition: 0.3s;
+            text-transform: uppercase;
         }
 
-        button:hover { background-color: #2ea043; }
+        button:hover { background-color: #ff2d70; transform: scale(1.02); }
 
         #resultado-logica {
-            margin-top: 25px;
+            margin-top: 20px;
             padding: 15px;
-            border-radius: 6px;
-            font-size: 1.1rem;
+            border-radius: 8px;
+            font-size: 1rem;
             font-weight: bold;
-            border: 1px solid transparent;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            text-align: center;
+            border: 2px solid transparent;
+            min-height: 50px;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>🚀 NASA Re-entry System</h1>
+        <h1>✈️ Flight Checklist</h1>
         
-        <label>Ângulo de Entrada (Graus)</label>
-        <input type="number" id="anguloInput" placeholder="Ex: 20">
+        <label>Combustível (%)</label>
+        <input type="number" id="combustivel" placeholder="Ex: 30">
 
-        <label>Integridade do Escudo (%)</label>
-        <input type="number" id="escudoInput" placeholder="Ex: 85">
+        <label>Peso da Aeronave (Toneladas)</label>
+        <input type="number" id="peso" placeholder="Ex: 45">
 
-        <button id="btnCalcular">Iniciar Reentrada</button>
+        <label>Velocidade do Vento (km/h)</label>
+        <input type="number" id="vento" placeholder="Ex: 35">
 
-        <div id="resultado-logica">Aguardando telemetria...</div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="flaps">
+            <label style="margin:0">Flaps Ajustados?</label>
+        </div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="torre">
+            <label style="margin:0">Autorização da Torre?</label>
+        </div>
+
+        <button id="btnVerificar">Analisar Decolagem</button>
+
+        <div id="resultado-logica">Aguardando dados...</div>
     </div>
 
     <script>
-const btn = document.getElementById('btnCalcular');
-        const display = document.getElementById('resultado-logica');
+        const btn = document.getElementById('btnVerificar');
+        const campoTexto = document.getElementById('resultado-logica');
 
         btn.addEventListener('click', () => {
-            const angulo = parseFloat(document.getElementById('anguloInput').value);
-            const escudo = parseFloat(document.getElementById('escudoInput').value);
+            const combustivel = parseFloat(document.getElementById('combustivel').value);
+            const peso = parseFloat(document.getElementById('peso').value);
+            const vento = parseFloat(document.getElementById('vento').value);
+            const flapsAjustados = document.getElementById('flaps').checked;
+            const autorizacaoTorre = document.getElementById('torre').checked;
 
             let mensagem = "";
             let cor = "";
+            let decolagemOk = true;
 
-            // --- LÓGICA DE REENTRADA ---
+            // --- LÓGICA DE SEGURANÇA ---
 
-            if (isNaN(angulo) || isNaN(escudo)) {
-                mensagem = "❌ Insira os dados da telemetria!";
-                cor = "#f85149";
-            } else if (escudo < 50) {
-                mensagem = "CRÍTICO: Escudo insuficiente. A nave será destruída.";
-                cor = "#f85149";
-            } else if (angulo < 15) {
-                mensagem = "ALERTA: Ângulo muito raso. A nave irá ricochetear na atmosfera.";
+            if (isNaN(combustivel) || isNaN(peso) || isNaN(vento)) {
+                mensagem = "ERRO: Insira todos os dados numéricos.";
                 cor = "#d29922";
-            } else if (angulo > 25) {
-                mensagem = "CRÍTICO: Ângulo muito agudo. Calor excessivo detectado.";
+                decolagemOk = false;
+            } else if (!autorizacaoTorre) {
+                mensagem = "DECOLAGEM ABORTADA: Aguardando liberação da Torre.";
                 cor = "#f85149";
-            } else {
-                mensagem = "REENTRADA SEGURA: Ângulo e Escudos ideais.";
+                decolagemOk = false;
+            } else if (combustivel < 20) {
+                mensagem = "DECOLAGEM ABORTADA: Nível de combustível crítico.";
+                cor = "#f85149";
+                decolagemOk = false;
+            } else if (vento > 50) {
+                mensagem = "DECOLAGEM ABORTADA: Vento excessivo para decolagem.";
+                cor = "#f85149";
+                decolagemOk = false;
+            } else if (!flapsAjustados) {
+                mensagem = "ALERTA: Ajuste os flaps antes de prosseguir.";
+                cor = "#d29922";
+                decolagemOk = false;
+            }
+
+           // --- RESULTADO FINAL ---
+            if (decolagemOk) {
+                mensagem = "DECOLAGEM AUTORIZADA: Sistemas nominais.";
                 cor = "#3fb950";
             }
 
-            display.innerText = mensagem;
-            display.style.color = cor;
-            display.style.borderColor = cor;
+            campoTexto.innerText = mensagem;
+            campoTexto.style.color = cor;
+            campoTexto.style.borderColor = cor;
         });
     </script>
     
